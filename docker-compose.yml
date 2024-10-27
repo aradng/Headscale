@@ -1,0 +1,63 @@
+services:
+  headscale:
+    image: 'headscale/headscale:0.25.0'
+    container_name: 'headscale'
+    restart: 'unless-stopped'
+    command: 'serve'
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs:/etc/headscale'
+    ports:
+      - '8080:8080'
+      - '9090:9090'
+      - '50443:50443'
+      - '3478:3478/udp'
+    environment:
+      TZ: 'Asia/Tehran'
+      HEADSCALE_LOG_LEVEL: "info"
+  headplane:
+    container_name: headplane
+    image: ghcr.io/tale/headplane:latest
+    restart: unless-stopped
+    depends_on:
+      - headscale
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs:/etc/headscale'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    ports:
+      - '3000:3000'
+    environment:
+      DEBUG: true
+      COOKIE_SECRET: 'abcdefghijklmnopqrstuvwxyz'
+      HEADSCALE_INTEGRATION: 'docker'
+      HEADSCALE_CONTAINER: 'headscale'
+      DISABLE_API_KEY_LOGIN: 'false'
+      HOST: '0.0.0.0'
+      PORT: '3000'
+
+      #OIDC_CLIENT_ID: 'headscale'
+      #OIDC_ISSUER: ''
+      #OIDC_CLIENT_SECRET: 'super_secret_client_secret'
+
+      # This NEEDS to be set with OIDC, regardless of what's in the config
+      # This needs to be a very long-lived (999 day) API key used to create
+      # shorter ones for OIDC and allow the OIDC functionality to work
+      ROOT_API_KEY: ''
+
+  nginx:
+    image: jonasal/nginx-certbot:latest
+    restart: unless-stopped
+    environment:
+      - CERTBOT_EMAIL
+    env_file:
+      - .env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:                                    # Storage can be either a
+      - nginx_secrets:/etc/letsencrypt          # Docker managed volume (see list at the bottom)
+      - ./nginx_conf:/etc/nginx/user_conf.d    # or a host mount with a relative or full path.
+
+volumes:
+  nginx_secrets:

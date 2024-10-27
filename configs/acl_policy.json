@@ -1,0 +1,37 @@
+{
+  "groups": {
+    "group:admin": ["aradng", "bardia"],
+    "group:tnc": ["tnc"]
+  },
+  "acls": [
+    { "action": "accept", "src": ["*"], "dst": ["autogroup:internet:*"] },
+    { "action": "accept", "src": ["*"], "dst":["31.14.122.32/27:*"]},
+    { "action": "accept", "src": ["*"], "dst":["95.217.250.64/27:*"]},
+    { "action": "accept", "src": ["*"], "dst":["172.16.1.180/32:*"]},
+    { "action": "accept", "src": ["group:admin", "group:tnc"], "dst":["10.0.0.0/14:*"]},
+    { "action": "accept", "src": ["tnc"], "dst":["tnc:*"]},
+    { "action": "accept", "src": ["aradng"], "dst":["aradng:*"]}
+  ],
+  "autoApprovers": {
+    "exitNode": ["tag:exit-node"]
+  },
+  "tagOwners": {
+    "tag:exit-node": [
+      "group:tnc"
+    ]
+  },
+  "ssh": [
+    {
+      "action": "accept",
+      "src": ["group:admin"],
+      "dst": ["group:tnc"],
+      "users": ["root", "tailscale"]
+    },
+    {
+      "action": "accept",
+      "src": ["aradng"],
+      "dst": ["*"],
+      "users": ["root", "aradng"]
+    }
+  ]
+}
